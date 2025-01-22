@@ -1,27 +1,38 @@
-import * as React from 'react'
-import { useController, type FieldValues, type Path, type UseControllerProps } from 'react-hook-form'
-import { FieldWrapper } from './FieldWrapper'
-import { getWidget } from '../../utils/registry'
-import type { BaseFieldProps } from '../../types/widget.types'
+import * as React from "react";
+import {
+  useController,
+  type FieldValues,
+  type Path,
+  type UseControllerProps,
+} from "react-hook-form";
+import { FieldWrapper } from "./FieldWrapper";
+import type { BaseFieldProps } from "../../types/widget.types";
 
 export interface FormFieldProps<
   TFieldValues extends FieldValues,
-  TName extends Path<TFieldValues>
+  TName extends Path<TFieldValues>,
 > extends BaseFieldProps<TFieldValues, TName>,
-  Omit<UseControllerProps<TFieldValues, TName>, 'name' | 'control'> {
-  type: string
+    Omit<UseControllerProps<TFieldValues, TName>, "name" | "control"> {
+  children: (field: {
+    value: any;
+    onChange: (...event: any[]) => void;
+    onBlur: () => void;
+    name: string;
+    ref: React.Ref<any>;
+    error?: any;
+  }) => React.ReactNode;
 }
 
 export function FormField<
   TFieldValues extends FieldValues,
-  TName extends Path<TFieldValues>
+  TName extends Path<TFieldValues>,
 >({
-  type,
   control,
   name,
   rules,
   defaultValue,
   shouldUnregister,
+  children,
   ...props
 }: FormFieldProps<TFieldValues, TName>) {
   const {
@@ -33,23 +44,14 @@ export function FormField<
     rules,
     defaultValue,
     shouldUnregister,
-  })
-
-  const widget = getWidget(type)
-  if (!widget) {
-    console.warn(`No widget registered for type: ${type}`)
-    return null
-  }
-
-  const { component: Component } = widget
+  });
 
   return (
-    <Component
-      {...props}
-      {...field}
-      control={control}
-      name={name}
-      error={error}
-    />
-  )
+    <FieldWrapper {...props} error={error?.message} name={name} control={control}>
+      {children({
+        ...field,
+        error,
+      })}
+    </FieldWrapper>
+  );
 }
